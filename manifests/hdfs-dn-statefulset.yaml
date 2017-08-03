@@ -22,7 +22,7 @@ metadata:
   name: hdfs-dn
 spec:
   serviceName: "hdfs-dn"
-  replicas: 1
+  replicas: 3
   template:
     metadata:
       labels:
@@ -31,7 +31,7 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
       - name: hdfs-dn
-        image: danisla/hadoop:2.7.2
+        image: sz-pg-oam-docker-hub-001.tendcloud.com/library/danisla-hadoop:2.7.2
         command:
            - "/bin/bash"
            - "/tmp/hadoop-config/bootstrap.sh"

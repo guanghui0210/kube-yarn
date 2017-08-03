@@ -7,10 +7,10 @@ metadata:
   labels:
     component: zeppelin
 spec:
-  type: NodePort
   ports:
-  - port: 8080
-    name: web
+  - name: web
+    port: 8080
+    targetPort: 8080
   # *.zeppelin.yarn-cluster.svc.cluster.local
   selector:
     component: zeppelin
@@ -30,7 +30,10 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
       - name: zeppelin
-        image: dylanmei/zeppelin:0.7.0
+        image: sz-pg-oam-docker-hub-001.tendcloud.com/library/dylanmei-zeppelin:0.7.0
+        ports:
+        - containerPort: 8080
+          name: web
         env:
         - name: ZEPPELIN_PORT
           value: "8080"

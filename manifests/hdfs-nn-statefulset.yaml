@@ -11,8 +11,11 @@ spec:
   - name: dfs
     port: 9000
     protocol: TCP
+    targetPort: 9000
+  - name: web
+    port: 50070
+    targetPort: 50070
   # *.hdfs-nn.yarn-cluster.svc.cluster.local
-  clusterIP: None
   selector:
     component: hdfs-nn
 ---
@@ -31,7 +34,12 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
       - name: hdfs-nn
-        image: danisla/hadoop:2.7.2
+        image: sz-pg-oam-docker-hub-001.tendcloud.com/library/danisla-hadoop:2.7.2
+        ports:
+        - containerPort: 50070
+          name: web
+        - containerPort: 9000
+          name: dfs
         command:
            - "/bin/bash"
            - "/tmp/hadoop-config/bootstrap.sh"

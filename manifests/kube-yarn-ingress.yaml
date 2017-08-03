@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: traefik-ingress
+  namespace: yarn-cluster
+spec:
+  rules:
+    - host: nn.hdfs.jimmysong.io
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: hdfs-nn
+            servicePort: 50070
+    - host: rm.yarn.jimmysong.io
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: yarn-rm
+            servicePort: 8088
+
+    - host: zeppelin.yarn.jimmysong.io
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: zeppelin
+            servicePort: 8080
