@@ -5,25 +5,38 @@ metadata:
   namespace: yarn-cluster
 spec:
   rules:
-    - host: nn.hdfs.jimmysong.io
-      http:
-        paths:
-        - path: /
-          backend:
-            serviceName: hdfs-nn
-            servicePort: 50070
-    - host: rm.yarn.jimmysong.io
+    - host: rm.yarn.tendcloud.com
       http:
         paths:
         - path: /
           backend:
             serviceName: yarn-rm
             servicePort: 8088
-
-    - host: zeppelin.yarn.jimmysong.io
+    - host: zeppelin.yarn.tendcloud.com
       http:
         paths:
         - path: /
           backend:
             serviceName: zeppelin
             servicePort: 8080
+    - host: sdl.spark.tendcloud.com
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: spark-sdl
+            servicePort: 8234
+    - host: jh.yarn.tendcloud.com
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: yarn-jh
+            servicePort: 19888
+    - host: web-proxy.yarn.tendcloud.com
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: web-proxy
+            servicePort: 8088
