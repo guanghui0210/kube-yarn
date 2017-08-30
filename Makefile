@@ -28,8 +28,14 @@ YARN_FILES=$(addprefix $(MANIFESTS)/,$(YARN_FILES_BASE))
 ZEPPELIN_FILES_BASE=zeppelin-statefulset.yaml
 ZEPPELIN_FILES=$(addprefix $(MANIFESTS)/,$(ZEPPELIN_FILES_BASE))
 
+SPARK_FILES_BASE=spark-statefulset.yaml
+SPARK_FILES=$(addprefix $(MANIFESTS)/,$(SPARK_FILES_BASE))
+
+INGRESS_FILES_BASE=kube-yarn-ingress.yaml
+INGRESS_FILES=$(addprefix $(MANIFESTS)/,$(INGRESS_FILES_BASE))
+
 all: init create-apps
-init: create-ns create-configmap
+init: create-ns create-configmap create-ingress
 clean: delete-apps delete-configmap delete-ns
 	@while [[ -n `kubectl get ns -o json | jq 'select(.items[].status.phase=="Terminating") | true'` ]]; do echo "Waiting for $(NAMESPACE) namespace termination" ; sleep 5; done
 
@@ -41,7 +47,7 @@ ifndef KUBECTL_BIN
 	curl -sf https://storage.googleapis.com/kubernetes-release/release/v1.3.3/bin/darwin/amd64/kubectl > /usr/local/bin/kubectl
 	chmod +x /usr/local/bin/kubectl
 endif
-	$(eval KUBECTL := kubectl --namespace $(NAMESPACE))
+	$(eval KUBECTL := kubectl --kubeconfig config --namespace $(NAMESPACE))
 
 # Create by file
 $(MANIFESTS)/%.yaml: kubectl
@@ -60,7 +66,7 @@ delete-statefulset-pods-%: kubectl
 
 ### Namespace
 create-ns: $(NAMESPACE_FILES)
-	@while [[ -z `kubectl get ns --selector=name=$(NAMESPACE) -o json | jq 'select(.items[].status.phase=="Active") | true'` ]]; do echo "Waiting for $(NAMESPACE) namespace creation" ; sleep 5; done
+	@while [[ -z `$(KUBECTL) get ns --selector=name=$(NAMESPACE) -o json | jq 'select(.items[].status.phase=="Active") | true'` ]]; do echo "Waiting for $(NAMESPACE) namespace creation" ; sleep 5; done
 
 delete-ns: $(addsuffix .delete,$(NAMESPACE_FILES))
 
@@ -68,25 +74,41 @@ delete-ns: $(addsuffix .delete,$(NAMESPACE_FILES))
 ### Config Map
 create-configmap: kubectl
 	$(KUBECTL) create configmap hadoop-config \
-	  --from-file=artifacts/bootstrap.sh \
-	  --from-file=artifacts/start-yarn-rm.sh \
-	  --from-file=artifacts/start-yarn-nm.sh \
-	  --from-file=artifacts/slaves \
-	  --from-file=artifacts/core-site.xml \
-	  --from-file=artifacts/hdfs-site.xml \
-	  --from-file=artifacts/mapred-site.xml \
-	  --from-file=artifacts/yarn-site.xml
+	  --from-file=artifacts/hadoop/bootstrap.sh \
+	  --from-file=artifacts/hadoop/start-yarn-rm.sh \
+	  --from-file=artifacts/hadoop/start-yarn-nm.sh \
+	  --from-file=artifacts/hadoop/slaves \
+	  --from-file=artifacts/hadoop/core-site.xml \
+	  --from-file=artifacts/hadoop/hdfs-site.xml \
+	  --from-file=artifacts/hadoop/mapred-site.xml \
+	  --from-file=artifacts/hadoop/yarn-site.xml \
+	  --from-file=artifacts/hadoop/capacity-scheduler.xml \
+	  --from-file=artifacts/hadoop/container-executor.cfg \
+	  --from-file=artifacts/hadoop/hadoop-env.sh \
+	  --from-file=artifacts/hadoop/log4j.properties \
+	  --from-file=artifacts/hadoop/nodemanager_exclude.txt \
+	  --from-file=artifacts/hadoop/yarn-env.sh
+	$(KUBECTL) create configmap spark-config \
+	  --from-file=artifacts/spark/spark-bootstrap.sh \
+	  --from-file=artifacts/spark/spark-env.sh \
+	  --from-file=artifacts/spark/spark-defaults.conf
 
 delete-configmap: kubectl
-	-$(KUBECTL) delete configmap hadoop-config
+	-$(KUBECTL) delete configmap hadoop-config 
+	-$(KUBECTL) delete configmap spark-config 
 
 get-configmap: kubectl
-	$(KUBECTL) get configmap hadoop-config -o=yaml
+	$(KUBECTL) get configmap hadoop-config -o=yaml 
+	$(KUBECTL) get configmap spark-config -o=yaml
 
+### Ingress
+create-ingress: $(INGRESS_FILES)
+
+delete-ingress: $(addsuffix .delete,$(INGRESS_FILES))
 
 ### All apps
-create-apps: create-hdfs create-yarn create-zeppelin
-delete-apps: delete-zeppelin delete-yarn delete-hdfs
+create-apps: create-hdfs create-yarn create-zeppelin create-spark
+delete-apps: delete-zeppelin delete-yarn delete-hdfs delete-spark
 
 
 ### HDFS
@@ -108,6 +130,10 @@ scale-nm: kubectl
 ### Zeppelin
 create-zeppelin: $(ZEPPELIN_FILES)
 delete-zeppelin: delete-zeppelin-pf $(addsuffix .delete,$(ZEPPELIN_FILES)) delete-statefulset-pods-zeppelin
+
+### spark
+create-spark: $(SPARK_FILES)
+delete-spark: delete-spark-pf $(addsuffix .delete,$(SPARK_FILES)) delete-statefulset-pods-spark
 
 ### Helper targets
 get-ns: kubectl
