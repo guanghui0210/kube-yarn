@@ -12,22 +12,10 @@ spec:
     name: web
   - port: 8031
     name: ipc
+  - port: 8032
+    name: proxy
   # *.yarn-rm.yarn-cluster.svc.cluster.local
-  selector:
-    component: yarn-rm
----
-# Service to access the yarn web ui
-apiVersion: v1
-kind: Service
-metadata:
-  name: yarn-ui
-  namespace: yarn-cluster
-  labels:
-    component: yarn-ui
-spec:
-  ports:
-  - port: 8088
-    name: web
+  clusterIP: None
   selector:
     component: yarn-rm
 ---
@@ -46,7 +34,7 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
       - name: yarn-rm
-        image: sz-pg-oam-docker-hub-001.tendcloud.com/library/danisla-hadoop:2.7.2
+        image: bj-xg-oam-docker-hub-001.tendcloud.com/library/hadoop-2.6.0-cdh5.5.2:v1
         ports:
         - containerPort: 8088
           name: web
@@ -59,10 +47,10 @@ spec:
         resources:
           requests:
             memory: "1024Mi"
-            cpu: "100m"
+            cpu: "1000m"
           limits:
-            memory: "2048Mi"
-            cpu: "2000m"
+            memory: "10240Mi"
+            cpu: "4000m"
         volumeMounts:
           - name: hadoop-config
             mountPath: /tmp/hadoop-config

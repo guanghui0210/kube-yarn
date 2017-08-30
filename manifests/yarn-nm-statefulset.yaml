@@ -12,7 +12,10 @@ spec:
     name: web
   - port: 8082
     name: web2
+  - port: 4040
+    name: proxy
   # *.yarn-nm.yarn-cluster.svc.cluster.local
+  clusterIP: None
   selector:
     component: yarn-nm
 ---
@@ -31,7 +34,7 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
       - name: yarn-nm
-        image: sz-pg-oam-docker-hub-001.tendcloud.com/library/danisla-hadoop:2.7.2
+        image: bj-xg-oam-docker-hub-001.tendcloud.com/library/hadoop-2.6.0-cdh5.5.2:v1
         ports:
         - containerPort: 8088
           name: web
@@ -42,10 +45,10 @@ spec:
         resources:
           requests:
             memory: "1024Mi"
-            cpu: "100m"
+            cpu: "1000m"
           limits:
-            memory: "2048Mi"
-            cpu: "4000m"
+            memory: "10240Mi"
+            cpu: "5000m"
         env:
           - name: MY_CPU_LIMIT
             valueFrom:
