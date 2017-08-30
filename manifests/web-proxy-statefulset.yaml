@@ -1,0 +1,54 @@
+# A headless service to create DNS records
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-proxy
+  namespace: yarn-cluster
+  labels:
+    component: web-proxy
+spec:
+  ports:
+  - port: 8088
+    name: web
+  # *.web-proxy.yarn-cluster.svc.cluster.local
+  clusterIP: None
+  selector:
+    component: web-proxy
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: web-proxy
+spec:
+  serviceName: "web-proxy"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        component: web-proxy
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+      - name: web-proxy
+        image: bj-xg-oam-docker-hub-001.tendcloud.com/library/hadoop-2.6.0-cdh5.5.2:v1
+        ports:
+        - containerPort: 8088
+          name: web
+        command:
+           - "/bin/bash"
+           - "/tmp/hadoop-config/bootstrap.sh"
+           - "-d"
+        resources:
+          requests:
+            memory: "1024Mi"
+            cpu: "1000m"
+          limits:
+            memory: "10240Mi"
+            cpu: "4000m"
+        volumeMounts:
+          - name: hadoop-config
+            mountPath: /tmp/hadoop-config
+      volumes:
+        - name: hadoop-config
+          configMap:
+            name: hadoop-config

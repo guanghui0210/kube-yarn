@@ -1,0 +1,56 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: spark-sdl
+  namespace: yarn-cluster
+spec:
+  ports:
+    - port: 8234
+      targetPort: 8234
+      name: sdl
+    - port: 4040
+      targetPort: 4040
+      name: proxy
+  clusterIP: None
+  selector:
+    component: sdl
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: sdl
+spec:
+  serviceName: "spark-sdl"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        component: sdl
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+      - name: sdl
+        image: bj-xg-oam-docker-hub-001.tendcloud.com/library/spark-1.6.0:v1
+        ports:
+        - containerPort: 8234
+          name: sdl
+        command:
+           - "/bin/bash"
+           - "/tmp/spark-config/spark-bootstrap.sh"
+           - "-d"
+        resources:
+          requests:
+            memory: "1024Mi"
+            cpu: "100m"
+        volumeMounts:
+          - name: hadoop-config
+            mountPath: /tmp/hadoop-config
+          - name: spark-config
+            mountPath: /tmp/spark-config
+      volumes:
+        - name: hadoop-config
+          configMap:
+            name: hadoop-config
+        - name: spark-config
+          configMap:
+            name: spark-config

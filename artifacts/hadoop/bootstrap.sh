@@ -33,6 +33,19 @@ if [[ "${HOSTNAME}" =~ "hdfs-dn" ]]; then
   $HADOOP_PREFIX/sbin/hadoop-daemon.sh start datanode
 fi
 
+if [[ "${HOSTNAME}" =~ "web-proxy" ]]; then
+  sed -i '/<\/configuration>/d' $HADOOP_PREFIX/etc/hadoop/yarn-site.xml
+  cat >> $HADOOP_PREFIX/etc/hadoop/yarn-site.xml <<- EOM
+  <property>
+    <name>yarn.web-proxy.address</name>
+    <value>web-proxy:8088</value>
+  </property>
+EOM
+  echo '</configuration>' >> $HADOOP_PREFIX/etc/hadoop/yarn-site.xml
+  $HADOOP_PREFIX/sbin/yarn-daemon.sh start proxyserver
+fi
+
+
 if [[ "${HOSTNAME}" =~ "yarn-rm" ]]; then
   sed -i s/yarn-rm/0.0.0.0/ $HADOOP_PREFIX/etc/hadoop/yarn-site.xml
   cp ${CONFIG_DIR}/start-yarn-rm.sh $HADOOP_PREFIX/sbin/

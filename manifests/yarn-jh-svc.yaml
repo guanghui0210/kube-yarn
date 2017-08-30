@@ -1,0 +1,15 @@
+# A headless service to create DNS records
+apiVersion: v1
+kind: Service
+metadata:
+  name: yarn-jh
+  namespace: yarn-cluster
+  labels:
+    component: yarn-jh
+spec:
+  ports:
+  - port: 19888
+    name: web
+  clusterIP: None
+  selector:
+    component: yarn-rm

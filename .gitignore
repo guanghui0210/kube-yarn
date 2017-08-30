@@ -1,1 +1,6 @@
 .DS_Store
+./images/yarn/*.tar.gz
+./images/spark/*.tar.gz
+./images/yarn/lib/*
+./images/yarn/*.tar.gz
+
